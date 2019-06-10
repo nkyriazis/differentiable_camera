@@ -92,12 +92,12 @@ auto distort_normalized_coordinates(const Eigen::MatrixBase<NC> &nc,
   return detail::make_vec2(ud0, vd0);
 }
 
-template <typename NC, typename DistCoeffs, typename Undistort>
+template <typename NC, typename DistCoeffs, typename Distort>
 auto undistort_normalized_coordinates(const Eigen::MatrixBase<NC> &nc,
                                       const Eigen::MatrixBase<DistCoeffs> &k,
-                                      Undistort &&undistort)
+                                      Distort &&distort)
 {
-  using Scalar  = typename decltype(undistort(nc, k))::Scalar;
+  using Scalar  = typename decltype(distort(nc, k))::Scalar;
   using DJac    = Eigen::Vector<Scalar, 2>;
   using DScalar = Eigen::AutoDiffScalar<DJac>;
   using DVec2   = Eigen::Vector<DScalar, 2>;
@@ -109,7 +109,7 @@ auto undistort_normalized_coordinates(const Eigen::MatrixBase<NC> &nc,
     const DVec2 nc_diff = {DScalar{ret.x(), DJac{1, 0}},
                            DScalar{ret.y(), DJac{0, 1}}};
 
-    const auto f_and_J = undistort(nc_diff, k) - nc; // f(x) and Df(x)/Dx
+    const auto f_and_J = distort(nc_diff, k) - nc; // f(x) and Df(x)/Dx
 
     const auto f = detail::make_vec2(f_and_J.x().value(), f_and_J.y().value());
     const auto J = detail::make_mat2x2(f_and_J.x().derivatives()(0),
