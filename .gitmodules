@@ -1,0 +1,3 @@
+[submodule "borrowed/clang_format"]
+	path = borrowed/clang_format
+	url = https://github.com/nkyriazis/clang_format.git
