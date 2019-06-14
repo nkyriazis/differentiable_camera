@@ -92,10 +92,14 @@ auto distort_normalized_coordinates(const Eigen::MatrixBase<NC> &nc,
   return detail::make_vec2(ud0, vd0);
 }
 
+namespace detail
+{
+
 template <typename NC, typename DistCoeffs, typename Distort>
-auto undistort_normalized_coordinates(const Eigen::MatrixBase<NC> &nc,
-                                      const Eigen::MatrixBase<DistCoeffs> &k,
-                                      Distort &&distort)
+auto undistort_normalized_coordinates_impl(
+  const Eigen::MatrixBase<NC> &nc,
+  const Eigen::MatrixBase<DistCoeffs> &k,
+  Distort &&distort)
 {
   using Scalar  = typename decltype(distort(nc, k))::Scalar;
   using DJac    = Eigen::Vector<Scalar, 2>;
@@ -122,4 +126,16 @@ auto undistort_normalized_coordinates(const Eigen::MatrixBase<NC> &nc,
 
   return ret;
 }
+} // namespace detail
+
+template <typename NC, typename DistCoeffs>
+auto undistort_normalized_coordinates(const Eigen::MatrixBase<NC> &nc,
+                                      const Eigen::MatrixBase<DistCoeffs> &k)
+{
+  return detail::undistort_normalized_coordinates_impl(
+    nc, k, [](const auto &nc, const auto &k) {
+      return distort_normalized_coordinates(nc, k);
+    });
+}
+
 } // namespace differentiable_camera

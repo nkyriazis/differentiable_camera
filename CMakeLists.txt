@@ -8,6 +8,7 @@ find_package(Boost REQUIRED unit_test_framework filesystem)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 add_subdirectory(camera)
+add_subdirectory(tests)
 
 add_executable(main main.cpp Eigen.natvis)
 target_link_libraries(main camera)

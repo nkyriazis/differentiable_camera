@@ -28,10 +28,7 @@ int main(int argc, char **argv)
   // const auto res =
   const auto dist =
     differentiable_camera::distort_normalized_coordinates(nc, k);
-  const auto undist = differentiable_camera::undistort_normalized_coordinates(
-    dist, k, [](const auto &nc, const auto &k) {
-      return differentiable_camera::distort_normalized_coordinates(nc, k);
-      ;
-    });
+  const auto undist =
+    differentiable_camera::undistort_normalized_coordinates(dist, k);
   return 0;
 }
