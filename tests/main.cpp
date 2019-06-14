@@ -1,4 +1,5 @@
 #include <camera/camera.hpp>
+#include <unsupported/Eigen/NumericalDiff>
 
 #define BOOST_TEST_MODULE UnitTests
 #include <boost/test/unit_test.hpp>
@@ -46,5 +47,88 @@ BOOST_AUTO_TEST_CASE(InvertibleDist2Undist)
       differentiable_camera::undistort_normalized_coordinates(nc_, k);
 
     BOOST_CHECK_LT((nc - nc__).norm(), 1e-9);
+  }
+}
+
+template <typename Selector_>
+struct JacFunctor
+{
+  using Scalar       = double;
+  using InputType    = Eigen::Vector<Scalar, 14>;
+  using ValueType    = Eigen::Vector2d;
+  using JacobianType = Eigen::Matrix<double, 2, 14>;
+  using Selector     = Selector_;
+  enum
+  {
+    InputsAtCompileTime = 1,
+    ValuesAtCompileTime = 1
+  };
+
+  static auto values() { return 2; }
+
+  void operator()(const InputType& x, ValueType& out) const
+  {
+    out = Selector::execute(x.head<2>(), x.tail<12>());
+  }
+};
+
+struct DistortSelector
+{
+  template <typename X, typename Y>
+  static auto execute(X&& x, Y&& y)
+  {
+    return differentiable_camera::distort_normalized_coordinates(x, y);
+  }
+};
+
+struct UndistortSelector
+{
+  template <typename X, typename Y>
+  static auto execute(X&& x, Y&& y)
+  {
+    return differentiable_camera::undistort_normalized_coordinates(x, y);
+  }
+};
+
+using JacFunctors =
+  std::tuple<JacFunctor<DistortSelector>, JacFunctor<UndistortSelector>>;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(DistortGradient, JacFunctor, JacFunctors)
+{
+  using Selector = typename JacFunctor::Selector;
+
+  Eigen::NumericalDiff<JacFunctor, Eigen::Central> functor;
+
+  for (int i = 0; i < 100; ++i)
+  {
+    const auto input = (JacFunctor::InputType::Random() * 0.1).eval();
+    JacFunctor::JacobianType jac;
+    functor.df(input, jac);
+
+    using DScalar = Eigen::AutoDiffScalar<Eigen::Vector<double, 14>>;
+    using DVec2   = Eigen::Vector<DScalar, 2>;
+    using DVec12  = Eigen::Vector<DScalar, 12>;
+
+    const auto out = Selector::execute(
+      DVec2{DScalar{input(0), 14, 0}, DScalar{input(1), 14, 1}},
+      DVec12{DScalar{input(2), 14, 2},
+             DScalar{input(3), 14, 3},
+             DScalar{input(4), 14, 4},
+             DScalar{input(5), 14, 5},
+             DScalar{input(6), 14, 6},
+             DScalar{input(7), 14, 7},
+             DScalar{input(8), 14, 8},
+             DScalar{input(9), 14, 9},
+             DScalar{input(10), 14, 10},
+             DScalar{input(11), 14, 11},
+             DScalar{input(12), 14, 12},
+             DScalar{input(13), 14, 13}});
+
+    for (Eigen::Index i = 0; i < 2; ++i)
+    {
+      BOOST_CHECK_LT(
+        (jac.row(i).transpose() - out(i).derivatives()).cwiseAbs().maxCoeff(),
+        1e-6);
+    }
   }
 }
