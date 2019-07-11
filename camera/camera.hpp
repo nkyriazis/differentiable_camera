@@ -100,7 +100,7 @@ auto find_normalized_ray_patch_intersection(
 
   Eigen::Matrix<typename decltype(z)::Scalar, 3, 3> R;
   R << x, y, z;
-  return R.inverse() * (intersection - oo);
+  return (R.inverse() * (intersection - oo)).template head<2>().eval();
 }
 
 } // namespace differentiable_camera
