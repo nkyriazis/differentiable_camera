@@ -35,6 +35,12 @@ auto make_vec2(const Scalar &x, const Scalar &y)
 }
 
 template <typename Scalar>
+auto make_vec3(const Scalar &x, const Scalar &y, const Scalar &z)
+{
+  return Eigen::Vector<Scalar, 3>{x, y, z};
+}
+
+template <typename Scalar>
 auto make_mat2x2(const Scalar &x,
                  const Scalar &y,
                  const Scalar &z,

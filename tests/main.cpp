@@ -1,8 +1,11 @@
+#include <boost/math/constants/constants.hpp>
 #include <camera/camera.hpp>
 #include <unsupported/Eigen/NumericalDiff>
 
 #define BOOST_TEST_MODULE UnitTests
 #include <boost/test/unit_test.hpp>
+
+static constexpr auto PI = boost::math::constants::pi<double>();
 
 BOOST_AUTO_TEST_CASE(Eval)
 {
@@ -130,5 +133,45 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(DistortGradient, JacFunctor, JacFunctors)
         (jac.row(i).transpose() - out(i).derivatives()).cwiseAbs().maxCoeff(),
         1e-6);
     }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(Wnd2Ray)
+{
+  const Eigen::Vector2d f{1, 1};
+  const Eigen::Vector2d c{0, 0};
+  Eigen::Vector<double, 12> k;
+  k.setZero();
+
+  {
+    const auto ray =
+      differentiable_camera::window_to_ray(Eigen::Vector2d{0, 0}, f, c, k);
+    BOOST_CHECK_CLOSE(ray.x(), 0, 1e-9);
+    BOOST_CHECK_CLOSE(ray.y(), 0, 1e-9);
+    BOOST_CHECK_CLOSE(ray.z(), 1, 1e-9);
+  }
+
+  {
+    const auto ray =
+      differentiable_camera::window_to_ray(Eigen::Vector2d{1, 0}, f, c, k);
+    BOOST_CHECK_CLOSE(ray.x(), cos(PI / 4), 1e-9);
+    BOOST_CHECK_CLOSE(ray.y(), 0, 1e-9);
+    BOOST_CHECK_CLOSE(ray.z(), sqrt(1 - pow(cos(PI / 4), 2)), 1e-9);
+  }
+
+  {
+    const auto ray =
+      differentiable_camera::window_to_ray(Eigen::Vector2d{0, 1}, f, c, k);
+    BOOST_CHECK_CLOSE(ray.x(), 0, 1e-9);
+    BOOST_CHECK_CLOSE(ray.y(), cos(PI / 4), 1e-9);
+    BOOST_CHECK_CLOSE(ray.z(), sqrt(1 - pow(cos(PI / 4), 2)), 1e-9);
+  }
+
+  {
+    const auto ray =
+      differentiable_camera::window_to_ray(Eigen::Vector2d{1, 1}, f, c, k);
+    BOOST_CHECK_CLOSE(ray.x(), 1 / sqrt(3), 1e-9);
+    BOOST_CHECK_CLOSE(ray.x(), 1 / sqrt(3), 1e-9);
+    BOOST_CHECK_CLOSE(ray.x(), 1 / sqrt(3), 1e-9);
   }
 }

@@ -56,4 +56,51 @@ auto undistort_normalized_coordinates(const Eigen::MatrixBase<NC> &nc,
     });
 }
 
+template <typename WND, typename Focal, typename CoP, typename DistCoeffs>
+auto window_to_ray(const Eigen::MatrixBase<WND> &wnd,
+                   const Eigen::MatrixBase<Focal> &f,
+                   const Eigen::MatrixBase<CoP> &c,
+                   const Eigen::MatrixBase<DistCoeffs> &k)
+{
+  const auto normalized =
+    window_coordinates_to_normalized_coordinates(wnd, f, c);
+  const auto undistorted = undistort_normalized_coordinates(normalized, k);
+  const auto l           = sqrt(undistorted.squaredNorm() + 1.0);
+  return detail::make_vec3(undistorted.x() / l, undistorted.y() / l, 1.0 / l);
+}
+
+template <typename RayOrigin,
+          typename RayDirection,
+          typename PlaneOrigin,
+          typename PlaneDirection>
+auto find_ray_plane_intersection_time(
+  const Eigen::MatrixBase<RayOrigin> &o,
+  const Eigen::MatrixBase<RayDirection> &d,
+  const Eigen::MatrixBase<PlaneOrigin> &oo,
+  const Eigen::MatrixBase<PlaneDirection> &dd)
+{
+  return dd.dot(oo - o) / dd.dot(d);
+}
+
+template <typename RayOrigin,
+          typename RayDirection,
+          typename PatchOrigin,
+          typename PatchXAxis,
+          typename PatchYAxis>
+auto find_normalized_ray_patch_intersection(
+  const Eigen::MatrixBase<RayOrigin> &o,
+  const Eigen::MatrixBase<RayDirection> &d,
+  const Eigen::MatrixBase<PatchOrigin> &oo,
+  const Eigen::MatrixBase<PatchXAxis> &x,
+  const Eigen::MatrixBase<PatchYAxis> &y)
+{
+  const auto z            = x.cross(y).normalized();
+  const auto t            = find_ray_plane_intersection_time(o, d, oo, z);
+  const auto intersection = o + t * d;
+
+  Eigen::Matrix<typename decltype(z)::Scalar, 3, 3> R;
+  R << x, y, z;
+  return R.inverse() * (intersection - oo);
+}
+
 } // namespace differentiable_camera
