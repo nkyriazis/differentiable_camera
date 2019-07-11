@@ -209,4 +209,49 @@ BOOST_AUTO_TEST_CASE(RayPatchIntersection)
     BOOST_CHECK_CLOSE(uv.x(), 0, 1e-9);
     BOOST_CHECK_CLOSE(uv.y(), 0, 1e-9);
   }
+
+  {
+    const Eigen::Vector3d o{0.5, 0.5, 0};
+    const Eigen::Vector3d d{0, 0, 1};
+    const Eigen::Vector3d oo{0, 0, 2};
+    const Eigen::Vector3d x{2, 0, 0};
+    const Eigen::Vector3d y{0, 2, 0};
+
+    const auto uv =
+      differentiable_camera::find_normalized_ray_patch_intersection(
+        o, d, oo, x, y);
+
+    BOOST_CHECK_CLOSE(uv.x(), 0.25, 1e-9);
+    BOOST_CHECK_CLOSE(uv.y(), 0.25, 1e-9);
+  }
+
+  {
+    const Eigen::Vector3d o{0.5, 0.5, 0};
+    const Eigen::Vector3d d{0, 0, 1};
+    const Eigen::Vector3d oo{0, 0, 2};
+    const Eigen::Vector3d x{-1, 0, 0};
+    const Eigen::Vector3d y{0, -1, 0};
+
+    const auto uv =
+      differentiable_camera::find_normalized_ray_patch_intersection(
+        o, d, oo, x, y);
+
+    BOOST_CHECK_CLOSE(uv.x(), -0.5, 1e-9);
+    BOOST_CHECK_CLOSE(uv.y(), -0.5, 1e-9);
+  }
+
+  {
+    const Eigen::Vector3d o{0.5, 0.5, 0};
+    const Eigen::Vector3d d{0, 0, 1};
+    const Eigen::Vector3d oo{0, 0, 2};
+    const Eigen::Vector3d x{cos(-PI / 4), 0, 0};
+    const Eigen::Vector3d y{0, 1, 0};
+
+    const auto uv =
+      differentiable_camera::find_normalized_ray_patch_intersection(
+        o, d, oo, x, y);
+
+    BOOST_CHECK_CLOSE(uv.x(), sqrt(pow(0.5, 2) + pow(0.5, 2)), 1e-9);
+    BOOST_CHECK_CLOSE(uv.y(), 0.5, 1e-9);
+  }
 }
