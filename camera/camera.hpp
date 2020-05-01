@@ -27,17 +27,19 @@ template <typename NC, typename DistCoeffs>
 auto distort_normalized_coordinates(const Eigen::MatrixBase<NC> &nc,
                                     const Eigen::MatrixBase<DistCoeffs> &k)
 {
+  using T = typename NC::Scalar;
+
   // ripped off from OpenCV source
   const auto r2 = nc.squaredNorm();
   const auto r4 = r2 * r2;
   const auto r6 = r2 * r4;
 
-  const auto a1 = 2 * nc.x() * nc.y();
-  const auto a2 = r2 + 2 * nc.x() * nc.x();
-  const auto a3 = r2 + 2 * nc.y() * nc.y();
+  const auto a1 = T(2) * nc.x() * nc.y();
+  const auto a2 = r2 + T(2) * nc.x() * nc.x();
+  const auto a3 = r2 + T(2) * nc.y() * nc.y();
 
-  const auto cdist   = 1 + k(0) * r2 + k(1) * r4 + k(4) * r6;
-  const auto icdist2 = 1. / (1 + k(5) * r2 + k(6) * r4 + k(7) * r6);
+  const auto cdist   = T(1) + k(0) * r2 + k(1) * r4 + k(4) * r6;
+  const auto icdist2 = 1. / (T(1) + k(5) * r2 + k(6) * r4 + k(7) * r6);
   const auto ud0     = detail::eval(nc.x() * cdist * icdist2 + k(2) * a1 +
                                 k(3) * a2 + k(8) * r2 + k(9) * r4);
   const auto vd0     = detail::eval(nc.y() * cdist * icdist2 + k(2) * a3 +

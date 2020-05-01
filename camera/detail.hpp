@@ -9,6 +9,12 @@ namespace differentiable_camera
 namespace detail
 {
 template <typename T>
+auto do_eval(const T &t)
+{
+  return t.eval();
+}
+
+template <typename T>
 auto eval(const T &t, std::enable_if_t<std::is_fundamental_v<T>> * = nullptr)
 {
   return t;
@@ -17,7 +23,7 @@ auto eval(const T &t, std::enable_if_t<std::is_fundamental_v<T>> * = nullptr)
 template <typename T>
 auto eval(const T &t, std::enable_if_t<!std::is_fundamental_v<T>> * = nullptr)
 {
-  return t.eval();
+  return do_eval(t);
 }
 
 template <typename Expr>
