@@ -63,10 +63,9 @@ auto window_to_ray(const Eigen::MatrixBase<WND> &wnd,
                    const Eigen::MatrixBase<Focal> &f,
                    const Eigen::MatrixBase<CoP> &c)
 {
-  const auto normalized =
-    window_coordinates_to_normalized_coordinates(wnd, f, c);
-  const auto l = sqrt(normalized.squaredNorm() + 1.0);
-  return detail::make_vec3(normalized.x() / l, normalized.y() / l, 1.0 / l);
+  return window_coordinates_to_normalized_coordinates(wnd, f, c)
+    .homogeneous()
+    .normalized();
 }
 
 template <typename WND, typename Focal, typename CoP, typename DistCoeffs>
@@ -75,11 +74,10 @@ auto window_to_ray(const Eigen::MatrixBase<WND> &wnd,
                    const Eigen::MatrixBase<CoP> &c,
                    const Eigen::MatrixBase<DistCoeffs> &k)
 {
-  const auto normalized =
-    window_coordinates_to_normalized_coordinates(wnd, f, c);
-  const auto undistorted = undistort_normalized_coordinates(normalized, k);
-  const auto l           = sqrt(undistorted.squaredNorm() + 1.0);
-  return detail::make_vec3(undistorted.x() / l, undistorted.y() / l, 1.0 / l);
+  return undistort_normalized_coordinates(
+           window_coordinates_to_normalized_coordinates(wnd, f, c), k)
+    .homogeneous()
+    .normalized();
 }
 
 template <typename RayOrigin,
