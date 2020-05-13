@@ -57,13 +57,21 @@ auto undistort_normalized_coordinates(const Eigen::MatrixBase<NC> &nc,
 }
 
 template <typename WND, typename Focal, typename CoP>
+auto window_to_ray_unnormalized(const Eigen::MatrixBase<WND> &wnd,
+                                const Eigen::MatrixBase<Focal> &f,
+                                const Eigen::MatrixBase<CoP> &c)
+{
+  return window_coordinates_to_normalized_coordinates(wnd, f, c)
+    .homogeneous()
+    .eval();
+}
+
+template <typename WND, typename Focal, typename CoP>
 auto window_to_ray(const Eigen::MatrixBase<WND> &wnd,
                    const Eigen::MatrixBase<Focal> &f,
                    const Eigen::MatrixBase<CoP> &c)
 {
-  return window_coordinates_to_normalized_coordinates(wnd, f, c)
-    .homogeneous()
-    .normalized();
+  return window_to_ray_unnormalized(wnd, f, c).normalized();
 }
 
 template <typename WND, typename Focal, typename CoP, typename DistCoeffs>
