@@ -78,15 +78,16 @@ auto undistort_normalized_coordinates_impl(
     const DVec2 nc_diff = {DScalar{ret.x(), DJac{1, 0}},
                            DScalar{ret.y(), DJac{0, 1}}};
 
-    const auto f_and_J = distort(nc_diff, k) - nc; // f(x) and Df(x)/Dx
+    const auto f_and_J = (distort(nc_diff, k) - nc).eval(); // f(x) and Df(x)/Dx
 
     const auto f = detail::make_vec2(f_and_J.x().value(), f_and_J.y().value());
     const auto J = detail::make_mat2x2(f_and_J.x().derivatives()(0),
                                        f_and_J.x().derivatives()(1),
                                        f_and_J.y().derivatives()(0),
                                        f_and_J.y().derivatives()(1));
-    const auto update = (J.inverse() * f).eval();
-    ret -= update;
+    const auto J_inv         = J.inverse().eval();
+    const auto J_inv_times_f = (J_inv * f).eval();
+    ret -= J_inv_times_f;
   }
 
   return ret;

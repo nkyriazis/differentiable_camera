@@ -11,7 +11,7 @@ auto normalized_coordinates_to_window_coordinates(
   const Eigen::MatrixBase<Focal> &focal,
   const Eigen::MatrixBase<CoP> &cop)
 {
-  return nc.cwiseProduct(focal) + cop;
+  return (nc.cwiseProduct(focal) + cop).eval();
 }
 
 template <typename WND, typename Focal, typename CoP>
@@ -20,7 +20,7 @@ auto window_coordinates_to_normalized_coordinates(
   const Eigen::MatrixBase<Focal> &focal,
   const Eigen::MatrixBase<CoP> &cop)
 {
-  return (wnd - cop).cwiseProduct(focal.cwiseInverse());
+  return ((wnd - cop).cwiseProduct(focal.cwiseInverse())).eval();
 }
 
 template <typename NC, typename DistCoeffs>
